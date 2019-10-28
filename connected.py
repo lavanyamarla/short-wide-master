@@ -1,6 +1,7 @@
 import scipy.io
 
 def connected_component(graph):
+	'''Function that returns largest connected component'''
 	dim = graph.shape[0]
 	
 	seen = set()

@@ -27,16 +27,19 @@ class Graph():
 		if (vertex1 in self.V and vertex2 in self.V):
 			# Set weights
 			self.graph[vertex1][vertex2] = weight
-			#self.graph[vertex2][vertex1] = weight
+			self.graph[vertex2][vertex1] = weight
 
 	def insert_node(self, i, k, j, l1, l2, np):
-		p = np[str(i)+str(k)]		
-		q = np[str(k)+str(j)]
+		'''Function that inserts new labels (floyd-warshall)'''
+		key1 = self.hash_pair(i, k)
+		key2 = self.hash_pair(k, j)
+		p = np[key1]
+		q = np[key2]
 
-		list1_ik = l1[str(i)+str(k)]
-		list2_ik = l2[str(i)+str(k)]
-		list1_kj = l1[str(k)+str(j)]
-		list2_kj = l2[str(k)+str(j)]
+		list1_ik = l1[key1]
+		list2_ik = l2[key1]
+		list1_kj = l1[key2]
+		list2_kj = l2[key2]
 		
 		new1 = []
 		new2 = []
@@ -56,6 +59,7 @@ class Graph():
 		return new1, new2
 
 	def max_labels(self, l1, l2, l1_prime, l2_prime):
+		'''Function that consolodates labels (floyd-warshall)'''
 		p = 0
 		q = 0
 
@@ -114,23 +118,34 @@ class Graph():
 
 		return new_l1, new_l2, num_labels	
 
+	def hash_pair(self, a, b):
+		'''Function that computes hash for pair of vertices'''
+		arr = [a, b]
+		arr.sort()
+		return str(arr)
+
 	def floyd(self):
+		'''Floyd-warshall method for all-to-all distances'''
+		# Initialize lists
 		l1 = {}
 		l2 = {}
 		np = {}
 
+		# Initialize values for edges
 		for v1 in self.V:
 			for v2 in self.V:
 				if v1 != v2:
+					key = self.hash_pair(v1, v2)
 					if v2 in self.graph[v1]:
-						l1[str(v1)+str(v2)] = [1]
-						l2[str(v1)+str(v2)] = [self.graph[v1][v2]]
-						np[str(v1)+str(v2)] = 1
+						l1[key] = [1]
+						l2[key] = [self.graph[v1][v2]]
+						np[key] = 1
 					else:
-						l1[str(v1)+str(v2)] = []
-						l2[str(v1)+str(v2)] = []
-						np[str(v1)+str(v2)] = 0
-		
+						l1[key] = []
+						l2[key] = []
+						np[key] = 0
+	
+		# Iteration for floyd-warshall	
 		for k in self.V:
 			print(k)
 			for i in self.V:
@@ -138,22 +153,59 @@ class Graph():
 					if i == j or i == k or j == k:
 						continue
 
+					key = self.hash_pair(i, j)
 					l1_prime, l2_prime = self.insert_node(i, k, j, l1, l2, np)
-					l1[str(i)+str(j)], l2[str(i)+str(j)], np[str(i)+str(j)] = self.max_labels(l1[str(i)+str(j)], 
-														  l2[str(i)+str(j)], 
-														  l1_prime, 
-														  l2_prime)
-		dist_list = []
+					l1[key], l2[key], np[key] = self.max_labels(l1[key], l2[key], l1_prime, l2_prime)
 
+		# Lists to store distance/pair
+		dist_list = []
+		pair_list = {}
+
+		# Store minimum distance/pair data
 		for i in self.V:
 			for j in self.V:
 				if i != j:
-					list1 = l1[str(i)+str(j)]
-					list2 = l2[str(i)+str(j)]
+					key = self.hash_pair(i, j)
+					list1 = l1[key]
+					list2 = l2[key]
 					if len(list1) != 0:
 						dist = [list1[x] * list2[x] for x in range(len(list1))]
 						dist_list.append(min(dist))
-		return dist_list
+						pair_list[(i,j)] = (min(dist), list1, list2)
+
+		# Return results
+		return dist_list, pair_list
+
+	def debug(self):
+		'''Code to debug and compare dijkstra and floyd-warshall methods'''
+		# Generate all-to-all distances
+		all_to_all = self.floyd()[1]
+		one_to_all = {}
+		geo = {}
+		max_weight = {}
+		for source in self.V:
+			print(source)
+			sw, _, width = self.bottle_neck(source)
+			dijk_geo, _ = self.dijkstras_geodesic(source)
+			for key in sw:
+				if key != source:
+					one_to_all[(source, key)] = sw[key]
+					geo[(source, key)] = dijk_geo[key]
+					max_weight[(source, key)] = width[key]
+
+		# Compare output of both methods, print differences
+		for a in self.V:
+			for b in self.V:
+				key = (a,b)
+				if key in one_to_all and (one_to_all[key] != all_to_all[key][0] or False):
+					print(str(key))
+					print('one-to-all: ' + str(one_to_all[key]))
+					print('\tDistance: ' + str(geo[key]))
+					print('\tWeight: ' + str(max_weight[key]))
+					print('all-to-all: ' + str(all_to_all[key][0]))
+					print('\tDistance: ' + str(all_to_all[key][1]))
+					print('\tWeight: ' + str(all_to_all[key][2]))
+					print()
 
 	def generate_plot(self, filename, s_w, s_g, s_s, method):
 		'''Generate plot of weighted vs short-wide vs geodesic distances'''
@@ -173,7 +225,7 @@ class Graph():
 			# Calculate distances
 			dijk_weight, _ = self.dijkstras_weighted(source)
 			if method == 'd':
-				sw, _ = self.bottle_neck(source)
+				sw, _, _ = self.bottle_neck(source)
 			dijk_geo, _ = self.dijkstras_geodesic(source)
 
 			# Store distances
@@ -199,7 +251,7 @@ class Graph():
 
 		# Calculate short_wide distance with floyd
 		if method == 'f':
-			short_wide_distance = self.floyd()
+			short_wide_distance = self.floyd()[0]
 
 		# Sort calculated distances
 		weighted_distance.sort()
@@ -213,7 +265,7 @@ class Graph():
 		with open('raw_output/' + filename + '/' + method + '_' + 'geodesic.pkl', 'wb') as f:
 			pickle.dump(geodesic_distance, f)
 
-		with open('raw_output/' + filename + '/' + method + '_' + 'short_wide.pkl', 'wb') as f:
+		with open('raw_output/' + filename + '/' + method + '_' + '_' + 'short_wide.pkl', 'wb') as f:
 			pickle.dump(short_wide_distance, f)
 
 		# Calculate bins
@@ -264,7 +316,7 @@ class Graph():
 		plt.xlim(xmin=0) 
 
 		# Save Plot
-		plt.savefig('plots/' + filename + '/' + method + '_' + str(s_w) + '_' + str(s_g) + '_' + str(s_s) + '.png')
+		plt.savefig('plots/' + filename + '/' + method + '_' + '_' + str(s_w) + '_' + str(s_g) + '_' + str(s_s) + '.png')
 
 		# Display Plot
 		plt.show()
@@ -472,6 +524,7 @@ class Graph():
 		# Determine distance/predecessor for each node	
 		dist = {}
 		pred = {}
+		width = {}
 		for node in self.V:
 			min_dist = float("inf")
 			for label in labels[node]:
@@ -479,8 +532,9 @@ class Graph():
 					min_dist = label.distance
 					pred[node] = (label.pred_node, label.pred_index)
 					dist[node] = label.distance
+					width[node] = label.max_width
 		
-		return dist, pred	
+		return dist, pred, width
 		
 
 if __name__ == "__main__":
@@ -500,6 +554,7 @@ if __name__ == "__main__":
 
 	test.generate_plot('test', 0.75, 0.9, 0.9, 'f')
 
+	#test.debug()
 	#print(test.floyd())
 
 	#dijk_weight_d, dijk_weight_p = test.dijkstras_weighted('A')

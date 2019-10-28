@@ -2,8 +2,19 @@ import sys
 import numpy as np
 from scipy import sparse
 
+# Open indian bus file (mbn)
+if sys.argv[1] == 'india_mbn':
+	with open('raw/india/mbn.txt') as f:
+		data = f.read()
+
+	dim = 2267
+
+	data = data.split('\n')[1:]
+
+	delimeter = '\t'
+
 # Open indian bus file (cbn)
-if sys.argv[1] == 'india':
+if sys.argv[1] == 'india_cbn':
 	with open('raw/india/cbn.txt') as f:
 		data = f.read()
 

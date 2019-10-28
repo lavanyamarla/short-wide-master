@@ -20,7 +20,6 @@ else:
 graph = connected_component(graph)
 
 # Modify edgeweights
-#graph /= graph.max()
 np.reciprocal(graph.data, out=graph.data)
 
 # Convert graph to dictionary
@@ -37,7 +36,12 @@ graph_algo = Graph(nodes)
 for key, value in graph.items():
 	graph_algo.make_connection(key[0], key[1], value)
 
+# Alert that we have created graph
 print('Created Graph')
 
-# Generate plot
-graph_algo.generate_plot(sys.argv[1], float(sys.argv[2]), float(sys.argv[3]), float(sys.argv[4]), sys.argv[5])
+# Branch for debugging vs plot generation
+if len(sys.argv) == 3 and sys.argv[2] == 'debug':
+	graph_algo.debug()
+else:
+	# Generate plot
+	graph_algo.generate_plot(sys.argv[1], float(sys.argv[2]), float(sys.argv[3]), float(sys.argv[4]), sys.argv[5], sys.argv[6])
