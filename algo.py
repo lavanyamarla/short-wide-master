@@ -207,6 +207,53 @@ class Graph():
 					print('\tWeight: ' + str(all_to_all[key][2]))
 					print()
 
+	def generate_distances(self):
+		'''Generate plot of weighted vs short-wide vs geodesic distances'''
+
+		# List of calculated distances	
+		weighted_distance = []
+		geodesic_distance = []
+		sw_d = []
+
+		# Variable for debugging
+		count = 0
+
+		# Calculate all distances
+		for source in self.V:
+			print(source)
+
+			# Calculate distances
+			dijk_weight, _ = self.dijkstras_weighted(source)
+			sw, _, _ = self.bottle_neck(source)
+			dijk_geo, _ = self.dijkstras_geodesic(source)
+
+			# Store distances
+			for vert in self.V:
+				# If node is "disconnected" ignore distance
+				if dijk_weight[vert] != sys.maxsize and dijk_weight[vert] != 0:
+					# Print if bounds are violated
+					if (round(dijk_weight[vert], 4) > round(sw[vert], 4) or round(sw[vert], 4) > round(dijk_geo[vert], 4)):
+						print('Bound Violated')
+						print('Weight: ' + str(dijk_weight[vert]))
+						print('SW: ' + str(sw[vert]))
+						print('Geo: ' + str(dijk_geo[vert]))
+
+					# Store calculated distances
+					weighted_distance.append(dijk_weight[vert])
+					sw_d.append(sw[vert])
+					geodesic_distance.append(dijk_geo[vert])
+
+				# Debugging
+				else:
+					count += 1
+
+		# Sort calculated distances
+		weighted_distance.sort()
+		geodesic_distance.sort()
+		sw_d.sort()
+
+		return weighted_distance, geodesic_distance, sw_d
+
 	def generate_plot(self, filename, s_w, s_g, s_s, method):
 		'''Generate plot of weighted vs short-wide vs geodesic distances'''
 
@@ -265,7 +312,7 @@ class Graph():
 		with open('raw_output/' + filename + '/' + method + '_' + 'geodesic.pkl', 'wb') as f:
 			pickle.dump(geodesic_distance, f)
 
-		with open('raw_output/' + filename + '/' + method + '_' + '_' + 'short_wide.pkl', 'wb') as f:
+		with open('raw_output/' + filename + '/' + method + '_' + 'short_wide.pkl', 'wb') as f:
 			pickle.dump(short_wide_distance, f)
 
 		# Calculate bins
@@ -316,7 +363,7 @@ class Graph():
 		plt.xlim(xmin=0) 
 
 		# Save Plot
-		plt.savefig('plots/' + filename + '/' + method + '_' + '_' + str(s_w) + '_' + str(s_g) + '_' + str(s_s) + '.png')
+		plt.savefig('plots/' + filename + '/' + method + '_' + str(s_w) + '_' + str(s_g) + '_' + str(s_s) + '.png')
 
 		# Display Plot
 		plt.show()

@@ -6,15 +6,8 @@ from pprint import pprint
 from algo import Graph
 from connected import connected_component
 
-if sys.argv[1] == 'neuron':
-	# Open matlab workspaces
-	data = io.loadmat('data/processed/neuron_data.mat')
-
-	# Select variable of importance
-	graph = data['Ag_t_ordered']
-else:
-	# Load sparse matrix
-	graph = sparse.load_npz('data/processed/' + sys.argv[1] + '.npz')
+# Load sparse matrix
+graph = sparse.load_npz('data/processed/' + sys.argv[1] + '.npz')
 
 # Get largest connected component
 graph = connected_component(graph)
@@ -44,4 +37,4 @@ if len(sys.argv) == 3 and sys.argv[2] == 'debug':
 	graph_algo.debug()
 else:
 	# Generate plot
-	graph_algo.generate_plot(sys.argv[1], float(sys.argv[2]), float(sys.argv[3]), float(sys.argv[4]), sys.argv[5], sys.argv[6])
+	graph_algo.generate_plot(sys.argv[1], float(sys.argv[2]), float(sys.argv[3]), float(sys.argv[4]), sys.argv[5])

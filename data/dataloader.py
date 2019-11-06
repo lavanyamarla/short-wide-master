@@ -2,6 +2,18 @@ import sys
 import numpy as np
 from scipy import sparse
 
+
+# Open indian bus file (mbn)
+if sys.argv[1] == 'facebook':
+	with open('raw/facebook/facebook_combined.txt') as f:
+		data = f.read()
+
+	dim = 4039
+
+	data = data.split('\n')[:-1]
+
+	delimeter = ' '
+
 # Open indian bus file (mbn)
 if sys.argv[1] == 'india_mbn':
 	with open('raw/india/mbn.txt') as f:
@@ -38,28 +50,37 @@ if sys.argv[1] == 'airport':
 # Initialize adjacency matrix
 adj_matrix = np.zeros((dim,dim))
 
+# Set of graphs were edge weight 1
+force_one = {'facebook'}
+
 # Create adjacency matrix
 for edge in data:
 	# Split entry
-	source = edge.split(delimeter)
+	row_data = edge.split(delimeter)
 
-	# Skip bad row
-	if len(source) < 3:
-		continue
+	# Set source
+	source = int(row_data[0]) - 1
 
 	# Set sink
-	sink = int(source[1]) - 1
+	sink = int(row_data[1]) - 1
+
+	# Force weight to one for specified graphs
+	if sys.argv[1] in force_one:
+		adj_matrix[source, sink] = 1
+		continue
+
+	# Skip bad row
+	if len(row_data) < 3:
+		continue
 
 	# Set weight
-	if 'e' not in source[2]:
-		weight = float(source[2])
+	if 'e' not in row_data[2]:
+		weight = float(row_data[2])
 	else:
-		num = source[2].split('e')
+		num = row_data[2].split('e')
 		exp = int(num[1][1:])
 		weight = int(num[0]) * 10**exp
 
-	# Set source
-	source = int(source[0]) - 1
 
 	# Update adjacency
 	adj_matrix[source, sink] = weight
