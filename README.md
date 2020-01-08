@@ -26,7 +26,7 @@ Run this file to generate distances for specific dataset.
 
 `python run.py [dataset] [weighted] [geo] [short_wide] [method]`
 
-dataset is name of dataset, weighted/geo/short_wide are bin sizes, and method is `d` for Dijkstras or `f` for Floyd-Warshal.
+dataset is name of dataset, weighted/geo/short_wide are bin sizes, and method is `d` for single origin-destination pair or `f` for all-pairs.
 
 This file can also be used for debugging.
 
@@ -51,7 +51,7 @@ Run this file to generate new plots based on existing data.
 
 `python replot.py [dataset] [weighted] [geo] [short_wide] [method]`
 
-dataset is name of dataset, weighted/geo/short_wide are bin sizes, and method is `d` for Dijkstras or `f` for Floyd-Warshal.
+dataset is name of dataset, weighted/geo/short_wide are bin sizes, and method is `d` for single origin-destination pair or `f` for all-pairs.
 
 ### dataloader.py
 Run this file to generate processed data in npz format
